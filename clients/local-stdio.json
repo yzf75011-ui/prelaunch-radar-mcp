@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "new-shopify-stores": {
+      "command": "npx",
+      "args": ["-y", "@apify/actors-mcp-server", "--tools", "prelaunch-radar/new-shopify-stores-pre-launch-radar"],
+      "env": { "APIFY_TOKEN": "YOUR_APIFY_TOKEN" }
+    }
+  }
+}

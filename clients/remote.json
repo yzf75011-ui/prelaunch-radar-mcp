@@ -1,0 +1,7 @@
+{
+  "mcpServers": {
+    "new-shopify-stores": {
+      "url": "https://mcp.apify.com/?tools=prelaunch-radar/new-shopify-stores-pre-launch-radar"
+    }
+  }
+}
