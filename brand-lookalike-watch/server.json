@@ -2,8 +2,9 @@
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.yzf75011-ui/brand-lookalike-watch",
   "title": "Brand Lookalike Watch",
-  "description": "Phishing and typosquatting domains imitating a brand, from public CT logs. Risk score, DNS, RDAP.",
-  "version": "1.0.0",
+  "description": "Phishing/typosquat domains imitating a brand, from CT logs. Weekly email: $2.99/mo on Gumroad.",
+  "version": "1.0.1",
+  "websiteUrl": "https://slama13.gumroad.com/l/snvpxl",
   "repository": {
     "url": "https://github.com/yzf75011-ui/prelaunch-radar-mcp",
     "source": "github",
