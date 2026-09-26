@@ -1,0 +1,18 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.yzf75011-ui/brand-lookalike-watch",
+  "title": "Brand Lookalike Watch",
+  "description": "Phishing and typosquatting domains imitating a brand, from public CT logs. Risk score, DNS, RDAP.",
+  "version": "1.0.0",
+  "repository": {
+    "url": "https://github.com/yzf75011-ui/prelaunch-radar-mcp",
+    "source": "github",
+    "subfolder": "brand-lookalike-watch"
+  },
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "https://mcp.apify.com/?tools=prelaunch-radar/brand-lookalike-watch"
+    }
+  ]
+}

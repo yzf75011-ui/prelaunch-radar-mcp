@@ -7,6 +7,9 @@ per store, pay per result, no personal data.
 The tool runs on Apify and is served by the official Apify MCP server, so any MCP client
 (Claude Desktop, Claude Code, Cursor, VS Code, Windsurf, n8n, LangChain, CrewAI) can use it.
 
+> **Also in this repo:** [Brand Lookalike Watch](brand-lookalike-watch/) — phishing and
+> typosquatting domains imitating a brand, from the same CT logs, as an MCP tool.
+
 ## Connect in one paste
 
 **Remote (recommended, sign in with Apify in the browser):** add this to your client's MCP config
