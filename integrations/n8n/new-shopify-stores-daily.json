@@ -1,0 +1,94 @@
+{
+  "name": "New Shopify stores → webhook (daily, Pre-Launch Radar)",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "days",
+              "triggerAtHour": 8
+            }
+          ]
+        }
+      },
+      "id": "a1f0c9e2-1b2c-4d3e-8f90-000000000001",
+      "name": "Every morning",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.apify.com/v2/acts/prelaunch-radar~new-shopify-stores-pre-launch-radar/run-sync-get-dataset-items",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"mode\": \"feed\",\n  \"sinceDays\": 1,\n  \"maxItems\": 100\n}",
+        "options": {
+          "timeout": 300000
+        }
+      },
+      "id": "a1f0c9e2-1b2c-4d3e-8f90-000000000002",
+      "name": "Get new Shopify stores (Apify)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        260,
+        0
+      ],
+      "notes": "Credential: Header Auth, name = Authorization, value = Bearer <your Apify API token>. maxItems caps the billed results per run."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://YOUR-WEBHOOK-URL (Clay table webhook, Make, Slack, CRM)",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {}
+      },
+      "id": "a1f0c9e2-1b2c-4d3e-8f90-000000000003",
+      "name": "Send each store to your webhook",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        520,
+        0
+      ]
+    }
+  ],
+  "connections": {
+    "Every morning": {
+      "main": [
+        [
+          {
+            "node": "Get new Shopify stores (Apify)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get new Shopify stores (Apify)": {
+      "main": [
+        [
+          {
+            "node": "Send each store to your webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {}
+}

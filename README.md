@@ -35,6 +35,22 @@ Fields: `store_domain`, `store_name`, `status` (`live` | `pre-launch`), `niche`,
 `region`, `currency`, `products`, `collections`, `ships_to`, `product_types`, `sample_titles`,
 `domain_registered` (RDAP), `first_detected`.
 
+## Automate it: new stores into Clay, n8n, Make or your CRM
+
+No server to run. Import [`integrations/n8n/new-shopify-stores-daily.json`](integrations/n8n/new-shopify-stores-daily.json)
+into n8n (**Workflows → Import from file**):
+
+1. **Every morning** triggers the workflow at 08:00.
+2. **Get new Shopify stores** calls the Actor with `{"mode": "feed", "sinceDays": 1, "maxItems": 100}`.
+   Add a *Header Auth* credential: name `Authorization`, value `Bearer <your Apify API token>`.
+   `maxItems` caps what one run can bill.
+3. **Send each store to your webhook** posts one JSON object per store to any URL:
+   a Clay table webhook, a Make custom webhook, Slack, HubSpot, your own endpoint.
+
+Filters (`status`, `countries`, `niches`) go in the same JSON body. The feed holds
+business-level public data only; any contact enrichment you add downstream is your own
+processing, under your own compliance.
+
 ## Links
 
 - Apify Store page: https://apify.com/prelaunch-radar/new-shopify-stores-pre-launch-radar
