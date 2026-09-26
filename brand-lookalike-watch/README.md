@@ -34,6 +34,13 @@ Fields: `domain`, `unicode`, `brand`, `match_type` (`typosquat` | `homoglyph` | 
 `tld-variant`), `matched_on`, `registrable_domain`, `risk_score`, `risk_signals`, `resolves`,
 `ip`, `domain_registered`, `domain_age_days`, `certificate_seen`.
 
+## No agent? Get a weekly email instead
+
+Looking for automated weekly monitoring without running an agent or an Actor? Subscribe to our
+turnkey **Brand Watch** service ($2.99/month): type your brand once, get one email a week with the
+new look-alike domains and a CSV file. Same engine, no setup, cancel anytime:
+https://slama13.gumroad.com/l/snvpxl
+
 ## Coverage
 
 Let's Encrypt certificates sampled from public CT logs every 2 hours, kept 7 days. An
