@@ -61,6 +61,52 @@
         520,
         0
       ]
+    },
+    {
+      "parameters": {
+        "content": "## New Shopify stores → your webhook\n\nEvery morning, this workflow fetches the Shopify stores detected in the last 24 h (including stores still behind their password page) and posts each one to a webhook of your choice: Clay, Make, Slack, a CRM.\n\n### How it works\n1. **Every morning** triggers at 08:00.\n2. **Get new Shopify stores** runs the Apify Actor and returns up to `maxItems` stores (domain, name, country, currency, niche, status, registration date).\n3. **Send each store** posts every store as JSON to your webhook.\n\n### Setup\n1. Create a Header Auth credential: name `Authorization`, value `Bearer <your Apify API token>`.\n2. Replace the webhook URL in the last node.\n3. Adjust `maxItems` to cap the billed results per run.\n\nData: public certificate logs, DNS and business-level store metadata only, no personal data. Not affiliated with Shopify Inc.",
+        "height": 520,
+        "width": 380,
+        "color": 6
+      },
+      "id": "a1f0c9e2-1b2c-4d3e-8f90-000000000101",
+      "name": "Overview",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -420,
+        -220
+      ]
+    },
+    {
+      "parameters": {
+        "content": "### Apify credential\nHeader Auth → `Authorization: Bearer <token>`.\n`maxItems` = maximum billed stores per run (pay per result).",
+        "height": 180,
+        "width": 260
+      },
+      "id": "a1f0c9e2-1b2c-4d3e-8f90-000000000102",
+      "name": "Apify credential",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        200,
+        -220
+      ]
+    },
+    {
+      "parameters": {
+        "content": "### Your webhook\nPaste the URL of a Clay table webhook, a Make scenario, a Slack incoming webhook or your CRM. Each store arrives as one JSON POST.",
+        "height": 180,
+        "width": 260
+      },
+      "id": "a1f0c9e2-1b2c-4d3e-8f90-000000000103",
+      "name": "Your webhook",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        470,
+        -220
+      ]
     }
   ],
   "connections": {
