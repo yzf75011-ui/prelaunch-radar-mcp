@@ -7,6 +7,8 @@ per store, pay per result, no personal data.
 The tool runs on Apify and is served by the official Apify MCP server, so any MCP client
 (Claude Desktop, Claude Code, Cursor, VS Code, Windsurf, n8n, LangChain, CrewAI) can use it.
 
+> Want the full raw database directly? [Download the fresh snapshot (580+ stores) for $4.99](https://slama13.gumroad.com/l/full-snapshot) — one CSV, no subscription, no agent needed.
+
 > **Also in this repo:** [Brand Lookalike Watch](brand-lookalike-watch/) — phishing and
 > typosquatting domains imitating a brand, from the same CT logs, as an MCP tool.
 
@@ -57,6 +59,7 @@ processing, under your own compliance.
 ## Links
 
 - Apify Store page: https://apify.com/prelaunch-radar/new-shopify-stores-pre-launch-radar
+- Want the full raw database directly? [Download the fresh snapshot (580+ stores) for $4.99](https://slama13.gumroad.com/l/full-snapshot)
 - Prefer a spreadsheet? Always-fresh CSV membership: https://slama13.gumroad.com/l/smjncx
 
 ## How it works
