@@ -45,14 +45,17 @@ Fields: `store_domain`, `store_name`, `status` (`live` | `pre-launch`), `niche`,
 No server to run. Import [`integrations/n8n/new-shopify-stores-daily.json`](integrations/n8n/new-shopify-stores-daily.json)
 into n8n (**Workflows → Import from file**):
 
-1. **Every morning** triggers the workflow at 08:00.
-2. **Get new Shopify stores** calls the Actor with `{"mode": "feed", "sinceDays": 1, "maxItems": 100}`.
-   Add a *Header Auth* credential: name `Authorization`, value `Bearer <your Apify API token>`.
-   `maxItems` caps what one run can bill.
-3. **Send each store to your webhook** posts one JSON object per store to any URL:
+1. **Every morning at 8** triggers the workflow.
+2. **Set your settings** holds everything you change: `webhookUrl`, `sinceDays` (1),
+   `status` (`any`, `pre-launch` or `live`), `countries` (e.g. `US, GB`, empty = all) and
+   `maxItems` (100), which caps what one run can bill.
+3. **Get new Shopify stores (Apify)** calls the Actor. Add a *Header Auth* credential:
+   name `Authorization`, value `Bearer <your Apify API token>`.
+4. **Keep store fields** keeps domain, name, status, niche, country, currency, products and dates.
+5. **Send each store to your webhook** posts one JSON object per store to any URL:
    a Clay table webhook, a Make custom webhook, Slack, HubSpot, your own endpoint.
 
-Filters (`status`, `countries`, `niches`) go in the same JSON body. The feed holds
+A `niches` filter can be added to the Apify request body. The feed holds
 business-level public data only; any contact enrichment you add downstream is your own
 processing, under your own compliance.
 

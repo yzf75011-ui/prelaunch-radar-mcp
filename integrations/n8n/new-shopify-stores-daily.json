@@ -1,6 +1,53 @@
 {
-  "name": "New Shopify stores → webhook (daily, Pre-Launch Radar)",
+  "name": "Send new and pre-launch Shopify stores from Apify to a webhook daily",
   "nodes": [
+    {
+      "parameters": {
+        "content": "## Send new and pre-launch Shopify stores from Apify to a webhook daily\n\nShopify app developers, agencies and service providers who want to reach new Shopify stores early, often while the store is still behind its password page.\n\n### How it works\n1. A **Schedule Trigger** runs every morning at 8.\n2. **Set your settings** holds your webhook URL, look-back window, status, countries and a cap on results.\n3. An **HTTP Request** runs the New Shopify Stores Pre-Launch Radar Actor on Apify and waits for its results. Stores come from public Certificate Transparency logs, DNS and each store's public metadata.\n4. **Keep store fields** keeps domain, name, status, niche, country, currency, product count and dates.\n5. A second **HTTP Request** posts each store to your webhook (Clay, Make, Slack, a CRM).\n\n### Setup\n1. Create an Apify account and copy your API token.\n2. In n8n, create a **Header Auth** credential: name `Authorization`, value `Bearer YOUR_APIFY_TOKEN`, and select it in the Apify node.\n3. Paste your webhook URL in **Set your settings**.\n4. Run once to test, then activate.\n\nAn Apify account (the Actor is billed per store returned, $0.02 each; `maxItems` caps every run) and an endpoint that accepts a JSON POST.\n\n### Customization\n- Set `status` to `pre-launch` to get only stores still behind a password page, or `live`.\n- Set `countries` to a list such as `US, GB, FR`; leave it empty for all.\n- Add or remove fields in **Keep store fields**.\n\nBusiness-level public data only: no emails, phones or personal names. Not affiliated with Shopify Inc. Disclosure: I built the Apify Actor used here.",
+        "height": 1010,
+        "width": 560
+      },
+      "id": "f7e7e8d1-5328-5846-b130-e939e44f4cbe",
+      "name": "Overview",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -600,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 1. Fetch new stores\nRuns daily, reads your settings and asks the Apify Actor for the stores first detected in the look-back window.",
+        "height": 360,
+        "width": 700,
+        "color": 7
+      },
+      "id": "a13642cb-6757-521b-8372-692834b639b3",
+      "name": "Fetch section",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        20,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 2. Deliver to your tools\nKeeps the useful fields and posts one JSON per store to your webhook.",
+        "height": 360,
+        "width": 500,
+        "color": 7
+      },
+      "id": "b86a8892-7a9e-5fdf-ad4e-4a0f42eac267",
+      "name": "Deliver section",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        760,
+        0
+      ]
+    },
     {
       "parameters": {
         "rule": {
@@ -12,13 +59,60 @@
           ]
         }
       },
-      "id": "a1f0c9e2-1b2c-4d3e-8f90-000000000001",
-      "name": "Every morning",
+      "id": "03df1928-fcf6-521f-8e90-96e70008196c",
+      "name": "Every morning at 8",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.2,
       "position": [
-        0,
-        0
+        80,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "91dbe6d5-f901-5105-852c-81dc48bb7373",
+              "name": "webhookUrl",
+              "value": "https://example.com/your-webhook",
+              "type": "string"
+            },
+            {
+              "id": "d86492de-8f25-56c0-802c-0b18c3e92b9e",
+              "name": "sinceDays",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "824ab884-0d69-5586-9685-41d0c5e87c98",
+              "name": "status",
+              "value": "any",
+              "type": "string"
+            },
+            {
+              "id": "0e61b955-c226-579a-9062-9fdb9905abef",
+              "name": "countries",
+              "value": "",
+              "type": "string"
+            },
+            {
+              "id": "fea52067-8229-5ac9-ba02-243fc8dc14dc",
+              "name": "maxItems",
+              "value": 100,
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "e1beff95-03cb-59a8-af18-ec022d4cf6a8",
+      "name": "Set your settings",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        300,
+        200
       ]
     },
     {
@@ -29,88 +123,125 @@
         "genericAuthType": "httpHeaderAuth",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "{\n  \"mode\": \"feed\",\n  \"sinceDays\": 1,\n  \"maxItems\": 100\n}",
+        "jsonBody": "={{ JSON.stringify({ mode: 'feed', sinceDays: $json.sinceDays, status: $json.status, countries: $json.countries.split(',').map(c => c.trim().toUpperCase()).filter(c => c), maxItems: $json.maxItems }) }}",
         "options": {
           "timeout": 300000
         }
       },
-      "id": "a1f0c9e2-1b2c-4d3e-8f90-000000000002",
+      "id": "ab398d3c-6642-55fa-bb9a-c44e443c6598",
       "name": "Get new Shopify stores (Apify)",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        260,
-        0
-      ],
-      "notes": "Credential: Header Auth, name = Authorization, value = Bearer <your Apify API token>. maxItems caps the billed results per run."
+        520,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "80084c74-7016-5d3e-9faa-2a688418b157",
+              "name": "store_domain",
+              "value": "={{ $json.store_domain }}",
+              "type": "string"
+            },
+            {
+              "id": "e0027167-d0d4-5b96-8bb4-a76ca3bd1c5a",
+              "name": "store_name",
+              "value": "={{ $json.store_name }}",
+              "type": "string"
+            },
+            {
+              "id": "824ab884-0d69-5586-9685-41d0c5e87c98",
+              "name": "status",
+              "value": "={{ $json.status }}",
+              "type": "string"
+            },
+            {
+              "id": "aa40921e-4dba-5eca-8796-d49f62513f35",
+              "name": "niche",
+              "value": "={{ $json.niche }}",
+              "type": "string"
+            },
+            {
+              "id": "84954ad2-380b-5f10-adbf-fdeb8fda100a",
+              "name": "country",
+              "value": "={{ $json.country }}",
+              "type": "string"
+            },
+            {
+              "id": "3a7a616f-42ca-5af2-ae4d-d4a6f4b20555",
+              "name": "currency",
+              "value": "={{ $json.currency }}",
+              "type": "string"
+            },
+            {
+              "id": "7ba41e8d-2a66-5ea7-9231-27607a5602b8",
+              "name": "products",
+              "value": "={{ $json.products }}",
+              "type": "number"
+            },
+            {
+              "id": "714d2881-5e28-5a9a-9fa1-41798880659e",
+              "name": "domain_registered",
+              "value": "={{ $json.domain_registered }}",
+              "type": "string"
+            },
+            {
+              "id": "fd1937a2-3e2d-521c-a58d-f0eecbc52a3e",
+              "name": "first_detected",
+              "value": "={{ $json.first_detected }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {
+          "ignoreConversionErrors": true
+        }
+      },
+      "id": "75b79b94-8634-50d9-96d6-f03c71148669",
+      "name": "Keep store fields",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        840,
+        200
+      ]
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "https://YOUR-WEBHOOK-URL (Clay table webhook, Make, Slack, CRM)",
+        "url": "={{ $('Set your settings').first().json.webhookUrl }}",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={{ JSON.stringify($json) }}",
         "options": {}
       },
-      "id": "a1f0c9e2-1b2c-4d3e-8f90-000000000003",
+      "id": "f3012bf1-4df1-5689-b263-3c84776ce44e",
       "name": "Send each store to your webhook",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        520,
-        0
-      ]
-    },
-    {
-      "parameters": {
-        "content": "## New Shopify stores → your webhook\n\nEvery morning, this workflow fetches the Shopify stores detected in the last 24 h (including stores still behind their password page) and posts each one to a webhook of your choice: Clay, Make, Slack, a CRM.\n\n### How it works\n1. **Every morning** triggers at 08:00.\n2. **Get new Shopify stores** runs the Apify Actor and returns up to `maxItems` stores (domain, name, country, currency, niche, status, registration date).\n3. **Send each store** posts every store as JSON to your webhook.\n\n### Setup\n1. Create a Header Auth credential: name `Authorization`, value `Bearer <your Apify API token>`.\n2. Replace the webhook URL in the last node.\n3. Adjust `maxItems` to cap the billed results per run.\n\nData: public certificate logs, DNS and business-level store metadata only, no personal data. Not affiliated with Shopify Inc.",
-        "height": 520,
-        "width": 380,
-        "color": 6
-      },
-      "id": "a1f0c9e2-1b2c-4d3e-8f90-000000000101",
-      "name": "Overview",
-      "type": "n8n-nodes-base.stickyNote",
-      "typeVersion": 1,
-      "position": [
-        -420,
-        -220
-      ]
-    },
-    {
-      "parameters": {
-        "content": "### Apify credential\nHeader Auth → `Authorization: Bearer <token>`.\n`maxItems` = maximum billed stores per run (pay per result).",
-        "height": 180,
-        "width": 260
-      },
-      "id": "a1f0c9e2-1b2c-4d3e-8f90-000000000102",
-      "name": "Apify credential",
-      "type": "n8n-nodes-base.stickyNote",
-      "typeVersion": 1,
-      "position": [
-        200,
-        -220
-      ]
-    },
-    {
-      "parameters": {
-        "content": "### Your webhook\nPaste the URL of a Clay table webhook, a Make scenario, a Slack incoming webhook or your CRM. Each store arrives as one JSON POST.",
-        "height": 180,
-        "width": 260
-      },
-      "id": "a1f0c9e2-1b2c-4d3e-8f90-000000000103",
-      "name": "Your webhook",
-      "type": "n8n-nodes-base.stickyNote",
-      "typeVersion": 1,
-      "position": [
-        470,
-        -220
+        1080,
+        200
       ]
     }
   ],
   "connections": {
-    "Every morning": {
+    "Every morning at 8": {
+      "main": [
+        [
+          {
+            "node": "Set your settings",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set your settings": {
       "main": [
         [
           {
@@ -125,6 +256,17 @@
       "main": [
         [
           {
+            "node": "Keep store fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Keep store fields": {
+      "main": [
+        [
+          {
             "node": "Send each store to your webhook",
             "type": "main",
             "index": 0
@@ -133,8 +275,8 @@
       ]
     }
   },
+  "pinData": {},
   "settings": {
     "executionOrder": "v1"
-  },
-  "pinData": {}
+  }
 }
