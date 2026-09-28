@@ -71,6 +71,7 @@ processing, under your own compliance.
 ## Links
 
 - Apify Store page: https://apify.com/prelaunch-radar/new-shopify-stores-pre-launch-radar
+- Free sample + daily stats on Hugging Face: https://huggingface.co/datasets/jowalker/new-shopify-stores
 - Want the full raw database directly? [Download the fresh snapshot (1,300+ stores) for $4.99](https://slama13.gumroad.com/l/full-snapshot)
 - Prefer a spreadsheet? Always-fresh CSV membership: https://slama13.gumroad.com/l/smjncx
 
