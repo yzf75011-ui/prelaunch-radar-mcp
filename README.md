@@ -7,7 +7,7 @@ per store, pay per result, no personal data.
 The tool runs on Apify and is served by the official Apify MCP server, so any MCP client
 (Claude Desktop, Claude Code, Cursor, VS Code, Windsurf, n8n, LangChain, CrewAI) can use it.
 
-> Want the full raw database directly? [Download the fresh snapshot (580+ stores) for $4.99](https://slama13.gumroad.com/l/full-snapshot) — one CSV, no subscription, no agent needed.
+> Want the full raw database directly? [Download the fresh snapshot (1,300+ stores) for $4.99](https://slama13.gumroad.com/l/full-snapshot) — one CSV, no subscription, no agent needed.
 
 > **Also in this repo:** [Brand Lookalike Watch](brand-lookalike-watch/) — phishing and
 > typosquatting domains imitating a brand, from the same CT logs, as an MCP tool.
@@ -55,6 +55,15 @@ into n8n (**Workflows → Import from file**):
 5. **Send each store to your webhook** posts one JSON object per store to any URL:
    a Clay table webhook, a Make custom webhook, Slack, HubSpot, your own endpoint.
 
+### Lead scoring version: ranked stores into Google Sheets and Slack
+
+[`integrations/n8n/new-shopify-stores-lead-scoring.json`](integrations/n8n/new-shopify-stores-lead-scoring.json)
+goes further: it skips stores already seen in earlier runs, scores each new store from 0 to 10
+(pre-launch, your target niches and countries, small catalog, ships abroad, young domain) with
+the reasons written out, logs every store in Google Sheets (updated by domain), sends one Slack
+alert per hot store and one digest for the warm ones. Sample data is pinned, so a first test
+run needs no Apify token.
+
 A `niches` filter can be added to the Apify request body. The feed holds
 business-level public data only; any contact enrichment you add downstream is your own
 processing, under your own compliance.
@@ -62,7 +71,7 @@ processing, under your own compliance.
 ## Links
 
 - Apify Store page: https://apify.com/prelaunch-radar/new-shopify-stores-pre-launch-radar
-- Want the full raw database directly? [Download the fresh snapshot (580+ stores) for $4.99](https://slama13.gumroad.com/l/full-snapshot)
+- Want the full raw database directly? [Download the fresh snapshot (1,300+ stores) for $4.99](https://slama13.gumroad.com/l/full-snapshot)
 - Prefer a spreadsheet? Always-fresh CSV membership: https://slama13.gumroad.com/l/smjncx
 
 ## How it works
