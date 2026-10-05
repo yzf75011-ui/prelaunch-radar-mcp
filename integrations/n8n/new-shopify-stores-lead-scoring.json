@@ -3,7 +3,7 @@
   "nodes": [
     {
       "parameters": {
-        "content": "## Score new Shopify stores from Apify and route hot leads to Sheets and Slack\n\nShopify app developers, agencies and freelancers who sell to new merchants and want a short, ranked list of fresh stores every morning instead of a raw dump.\n\n### How it works\n1. A **Schedule Trigger** runs daily and **Set your settings** holds your targets.\n2. An **HTTP Request** runs the New Shopify Stores Pre-Launch Radar Actor on Apify (public Certificate Transparency logs, DNS, store metadata).\n3. **Skip stores already seen** drops domains handled in earlier runs.\n4. **Score each store** gives 0–10 points: pre-launch, target niche, target country, small catalog, ships abroad, young domain, with the reasons in plain words.\n5. Every store is logged in Google Sheets (updated by domain).\n6. A **Switch** sends hot stores to Slack one by one and bundles warm ones into one digest.\n\n### Setup\n1. Create an Apify account and a **Header Auth** credential: name `Authorization`, value `Bearer YOUR_APIFY_TOKEN`.\n2. Connect Google Sheets and Slack.\n3. In **Set your settings**, paste your sheet URL and Slack channel, then set your niches and countries.\n4. Run once (sample data is pinned), unpin, activate.\n\nApify account (billed per store returned, $0.02 each; `maxItems` caps every run), a Google Sheet with a `Stores` tab, a Slack workspace.\n\n### Customization\n- Change the points or add rules in the **Score each store** code.\n- Raise or lower `hotScore` to control how many alerts you get.\n- Swap Slack for email, or Sheets for your CRM.\n\nBusiness-level public data only: no emails, phones or personal names. Not affiliated with Shopify Inc. Disclosure: I built the Apify Actor used here.",
+        "content": "## Score new Shopify stores from Apify and route hot leads to Sheets and Slack\n\nShopify app developers, agencies and freelancers who sell to new merchants and want a short, ranked list of fresh stores every morning instead of a raw dump.\n\n### How it works\n1. A **Schedule Trigger** runs daily and **Set your settings** holds your targets.\n2. An **HTTP Request** runs the New Shopify Stores Pre-Launch Radar Actor on Apify (public Certificate Transparency logs, DNS, store metadata).\n3. A saved **cursor** fetches only stores added since the last successful run: none is billed twice.\n4. **Score each store** gives 0–10 points: pre-launch, target niche, target country, small catalog, ships abroad, young domain, with the reasons in plain words.\n5. Every store is logged in Google Sheets (updated by domain).\n6. A **Switch** sends hot stores to Slack one by one and bundles warm ones into one digest.\n\n### Setup\n1. Create an Apify account and a **Header Auth** credential: name `Authorization`, value `Bearer YOUR_APIFY_TOKEN`.\n2. Connect Google Sheets and Slack.\n3. In **Set your settings**, paste your sheet URL and Slack channel, then set your niches and countries.\n4. Run once (sample data is pinned), unpin, activate. Only active runs save the cursor.\n\nApify account (billed per store returned, $0.02 each, after your filters; `maxItems` caps every run), a Google Sheet with a `Stores` tab, a Slack workspace.\n\n### Customization\n- Change the points or add rules in the **Score each store** code.\n- Raise or lower `hotScore` to control how many alerts you get.\n- Swap Slack for email, or Sheets for your CRM.\n\nBusiness-level public data only: no emails, phones or personal names. Not affiliated with Shopify Inc. Disclosure: I built the Apify Actor used here.",
         "height": 820,
         "width": 640
       },
@@ -18,7 +18,7 @@
     },
     {
       "parameters": {
-        "content": "## 1. Fetch and filter\nDaily run, your targets, the Apify Actor, then an empty-run check and a skip of stores seen in earlier runs.",
+        "content": "## 1. Fetch new stores only\nDaily run, your targets, the saved cursor, then the Apify Actor returns only stores added since the last successful run.",
         "height": 820,
         "width": 1000,
         "color": 7
@@ -89,10 +89,10 @@
         "assignments": {
           "assignments": [
             {
-              "id": "8f788020-9226-5e16-adec-a56734dc6701",
-              "name": "sinceDays",
-              "value": 1,
-              "type": "number"
+              "id": "a7965bed-210d-59c3-8c5c-bd18a53bd413",
+              "name": "startCursor",
+              "value": "0",
+              "type": "string"
             },
             {
               "id": "6a0424c8-ac0f-58c0-950c-71ee6673cbef",
@@ -163,13 +163,26 @@
     },
     {
       "parameters": {
+        "jsCode": "// Position saved by the last successful run (active workflows only).\nconst saved = $getWorkflowStaticData('global').cursor;\nreturn [{ json: { cursor: String(saved ?? $('Set your settings').first().json.startCursor) } }];"
+      },
+      "id": "652b2f2f-b6a9-5593-a338-ecf8adf6b72c",
+      "name": "Load cursor",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        400,
+        300
+      ]
+    },
+    {
+      "parameters": {
         "method": "POST",
         "url": "https://api.apify.com/v2/acts/prelaunch-radar~new-shopify-stores-pre-launch-radar/run-sync-get-dataset-items",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ mode: 'feed', sinceDays: $('Set your settings').first().json.sinceDays, status: $('Set your settings').first().json.status, countries: $('Set your settings').first().json.fetchCountries.split(',').map(c => c.trim().toUpperCase()).filter(c => c), maxItems: $('Set your settings').first().json.maxItems }) }}",
+        "jsonBody": "={{ JSON.stringify({ mode: 'feed', cursor: $('Load cursor').first().json.cursor, status: $('Set your settings').first().json.status, countries: $('Set your settings').first().json.fetchCountries.split(',').map(c => c.trim().toUpperCase()).filter(c => c), maxItems: $('Set your settings').first().json.maxItems }) }}",
         "options": {
           "timeout": 300000
         }
@@ -179,7 +192,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        440,
+        580,
         300
       ],
       "alwaysOutputData": true
@@ -213,7 +226,7 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        640,
+        760,
         300
       ]
     },
@@ -230,22 +243,7 @@
     },
     {
       "parameters": {
-        "operation": "removeItemsProcessedInPreviousExecutions",
-        "dedupeValue": "={{ $json.store_domain }}",
-        "options": {}
-      },
-      "id": "6393be02-40be-54f3-8013-44285a714788",
-      "name": "Skip stores already seen",
-      "type": "n8n-nodes-base.removeDuplicates",
-      "typeVersion": 2,
-      "position": [
-        860,
-        180
-      ]
-    },
-    {
-      "parameters": {
-        "jsCode": "// Points per signal: edit freely. Max 10.\nconst s = $('Set your settings').first().json;\nconst list = v => String(v || '').split(',').map(x => x.trim().toLowerCase()).filter(Boolean);\nconst niches = list(s.targetNiches);\nconst countries = list(s.targetCountries);\n\nreturn $input.all().map(({ json: st }) => {\n  let score = 0;\n  const why = [];\n  const add = (pts, reason) => { score += pts; why.push(reason); };\n\n  if (st.status === 'pre-launch') add(3, 'still behind its password page');\n  if (niches.includes(String(st.niche || '').toLowerCase())) add(2, `target niche (${st.niche})`);\n  if (countries.includes(String(st.country || '').toLowerCase())) add(2, `target country (${st.country})`);\n  const products = Number(st.products) || 0;\n  if (products >= 1 && products <= 50) add(1, `small catalog (${products} products)`);\n  if (Number(st.ships_to) > 1) add(1, `ships to ${st.ships_to} countries`);\n  const ageDays = st.domain_registered\n    ? (Date.now() - Date.parse(st.domain_registered)) / 86400000 : Infinity;\n  if (ageDays <= 30) add(1, 'domain under 30 days old');\n\n  return { json: {\n    store_domain: st.store_domain,\n    store_url: `https://${st.store_domain}`,\n    store_name: st.store_name || st.store_domain,\n    status: st.status,\n    niche: st.niche,\n    country: st.country,\n    products,\n    domain_registered: st.domain_registered,\n    first_detected: st.first_detected,\n    score,\n    why: why.join(', ') || 'no target signal',\n    scored_on: $now.toISODate(),\n  } };\n});"
+        "jsCode": "// Points per signal: edit freely. Max 10.\nconst s = $('Set your settings').first().json;\nconst list = v => String(v || '').split(',').map(x => x.trim().toLowerCase()).filter(Boolean);\nconst niches = list(s.targetNiches);\nconst countries = list(s.targetCountries);\n\nreturn $input.all().map(({ json: st }) => {\n  let score = 0;\n  const why = [];\n  const add = (pts, reason) => { score += pts; why.push(reason); };\n\n  if (st.status === 'pre-launch') add(3, 'still behind its password page');\n  if (niches.includes(String(st.niche || '').toLowerCase())) add(2, `target niche (${st.niche})`);\n  if (countries.includes(String(st.country || '').toLowerCase())) add(2, `target country (${st.country})`);\n  const products = Number(st.products) || 0;\n  if (products >= 1 && products <= 50) add(1, `small catalog (${products} products)`);\n  if (Number(st.ships_to) > 1) add(1, `ships to ${st.ships_to} countries`);\n  const ageDays = st.domain_registered\n    ? (Date.now() - Date.parse(st.domain_registered)) / 86400000 : Infinity;\n  if (ageDays <= 30) add(1, 'domain under 30 days old');\n\n  return { json: {\n    store_domain: st.store_domain,\n    store_url: `https://${st.store_domain}`,\n    store_name: st.store_name || st.store_domain,\n    status: st.status,\n    niche: st.niche,\n    country: st.country,\n    products,\n    domain_registered: st.domain_registered,\n    first_detected: st.first_detected,\n    status_checked_at: st.status_checked_at,\n    cursor: st.cursor,\n    score,\n    why: why.join(', ') || 'no target signal',\n    scored_on: $now.toISODate(),\n  } };\n});"
       },
       "id": "3713ed72-b8f1-50fb-8730-852382bf2a1e",
       "name": "Score each store",
@@ -306,6 +304,19 @@
       "typeVersion": 4.5,
       "position": [
         1480,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Runs after the Sheets write: the cursor moves only once stores are safely logged.\nconst seen = $('Score each store').all().map(i => Number(i.json.cursor)).filter(Number.isFinite);\nif (seen.length) {\n  const data = $getWorkflowStaticData('global');\n  data.cursor = String(Math.max(Number(data.cursor) || 0, ...seen));\n}\nreturn [{ json: { cursor: $getWorkflowStaticData('global').cursor ?? null, stores: seen.length } }];"
+      },
+      "id": "eafc8bb8-8ff4-50c0-bae6-a53d373c1f12",
+      "name": "Save cursor",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1720,
         180
       ]
     },
@@ -446,6 +457,17 @@
       "main": [
         [
           {
+            "node": "Load cursor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Load cursor": {
+      "main": [
+        [
+          {
             "node": "Get new Shopify stores (Apify)",
             "type": "main",
             "index": 0
@@ -468,7 +490,7 @@
       "main": [
         [
           {
-            "node": "Skip stores already seen",
+            "node": "Score each store",
             "type": "main",
             "index": 0
           }
@@ -476,17 +498,6 @@
         [
           {
             "node": "Nothing new today",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Skip stores already seen": {
-      "main": [
-        [
-          {
-            "node": "Score each store",
             "type": "main",
             "index": 0
           }
@@ -514,6 +525,17 @@
           },
           {
             "node": "Route by score",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log every store in Google Sheets": {
+      "main": [
+        [
+          {
+            "node": "Save cursor",
             "type": "main",
             "index": 0
           }
@@ -608,6 +630,24 @@
       },
       {
         "json": {
+          "store_domain": "pwteuroperetail.com",
+          "store_name": "PWT Europe Retail",
+          "niche": "Automotive",
+          "country": "DE",
+          "region": "",
+          "currency": "EUR",
+          "status": "live",
+          "products": 12186,
+          "collections": 25,
+          "ships_to": 1,
+          "product_types": "Car Tyres, Off road Tyres",
+          "sample_titles": "245/60R17 108H Kumho 245/60 HR17 TL 108H KUMHO HP71 XL EV So | 255/55R19 111W Michelin 255/55 WR19 TL 111W MI CROSSCLIMATE  | 275/65R18 116T B.F. Goodrich 275/65 TR18 TL 116T BFG TR-TERR",
+          "domain_registered": "2026-09-29",
+          "first_detected": "2026-10-03"
+        }
+      },
+      {
+        "json": {
           "store_domain": "www.walkeaseshoes.com",
           "store_name": "WESLEY PAUL NASON",
           "niche": "Fashion & Apparel",
@@ -626,74 +666,56 @@
       },
       {
         "json": {
-          "store_domain": "mavencouture.com",
-          "store_name": "Maven Couture Inc",
+          "store_domain": "www.belavixo.com",
+          "store_name": "Xandriah",
           "niche": "Fashion & Apparel",
           "country": "US",
-          "region": "Oregon",
+          "region": "Virginia",
           "currency": "USD",
           "status": "live",
-          "products": 5477,
-          "collections": 35,
-          "ships_to": 3,
-          "product_types": "Footwear > Sneakers > Designer Sneakers, Men's Sandals, Men's Sliders, SMALL LEATHER GOODS, SNEAKER, Sunglasses",
-          "sample_titles": "Valentino Garavani Valentino Garavani Rockstud Slides | Valentino Garavani Valentino Garavani Roman Stud Slide Sanda | VALENTINO GARAVANI - SNEAKERS",
-          "domain_registered": "2026-09-26",
-          "first_detected": "2026-09-26"
+          "products": 8056,
+          "collections": 6,
+          "ships_to": 134,
+          "product_types": "Boots, Jacket, Trainers",
+          "sample_titles": "Extended Bathtub Floor Mat – Premium PVC Safety Mat with Mas | Therma Fit | Adicolor Classics Firebird",
+          "domain_registered": "2026-09-23",
+          "first_detected": "2026-09-29"
         }
       },
       {
         "json": {
-          "store_domain": "oilfiltercap.shop",
-          "store_name": "My Store",
+          "store_domain": "nelavixo.com",
+          "store_name": "asiragni",
+          "niche": "Jewelry & Watches",
+          "country": "GB",
+          "region": "England",
+          "currency": "GBP",
+          "status": "live",
+          "products": 7202,
+          "collections": 489,
+          "ships_to": 133,
+          "product_types": "Cones, Grinders, Lighters, Steam Stones, Tubes, Vloei, mini glass bongs, pipes",
+          "sample_titles": "Joint Tubes 99 mm Mix Colors (250 Pcs) | Mini Aluminium Grinders Rotterdam (DK5025i-3) | Metal Grinders 3 Parts (0132)",
+          "domain_registered": "2026-09-23",
+          "first_detected": "2026-09-30"
+        }
+      },
+      {
+        "json": {
+          "store_domain": "jaxvilo.com",
+          "store_name": "Jaxvilo",
           "niche": "Home & Garden",
           "country": "US",
-          "region": "Ohio",
+          "region": "Missouri",
           "currency": "USD",
           "status": "live",
-          "products": 5002,
-          "collections": 31,
-          "ships_to": 28,
-          "product_types": "",
-          "sample_titles": "3 Pack of Rose Gold Multiple Leaf Glitter Picks | 2' Extension Cord for Coaxial Lights | 3 Pack of Teal Blue Glitter Feather Picks",
-          "domain_registered": "2026-09-18",
-          "first_detected": "2026-09-26"
-        }
-      },
-      {
-        "json": {
-          "store_domain": "rugbyseamfit.shop",
-          "store_name": "My Store",
-          "niche": "Electronics & Gadgets",
-          "country": "US",
-          "region": "California",
-          "currency": "USD",
-          "status": "live",
-          "products": 5000,
-          "collections": 32,
-          "ships_to": 28,
-          "product_types": "Beachwear, MTM, Womens Swimwear",
-          "sample_titles": "Revelation Maxi Dress - Pansy Pink | Tropic Daynight Underwired Bikini Set - Multi | M313S2660QB Basic Broadcloth",
-          "domain_registered": "2026-09-17",
-          "first_detected": "2026-09-26"
-        }
-      },
-      {
-        "json": {
-          "store_domain": "vethealthsup.shop",
-          "store_name": "My Store",
-          "niche": "Home & Garden",
-          "country": "US",
-          "region": "California",
-          "currency": "USD",
-          "status": "live",
-          "products": 5000,
-          "collections": 32,
-          "ships_to": 28,
-          "product_types": "3 Piece Dining Room Sets, Accent Poufs, Accent Stools, Area Rugs, Armless Chairs, Chair Sets, Chest Of Drawers, Counter ",
-          "sample_titles": "Kasney - 8' x 10' Rug - Cream / Brown | Sweed Valley - Pouf - Round - Natural / White | Delphine - 19\" Dining Chair (Set of 2) - Gray",
-          "domain_registered": "2026-09-18",
-          "first_detected": "2026-09-26"
+          "products": 7105,
+          "collections": 6,
+          "ships_to": 237,
+          "product_types": "Book, Cloth Napkin, Cocktail Napkin, Guest Napkin, Lamp, Match Striker, Napkin Holder, Notepad, Original Art, Paper Plat",
+          "sample_titles": "Guest Napkin - Scalloped Floral | Cocktail Napkin - Blue Ric Rac | Guest Napkin - Painted Flowers",
+          "domain_registered": "2026-09-29",
+          "first_detected": "2026-09-29"
         }
       }
     ]

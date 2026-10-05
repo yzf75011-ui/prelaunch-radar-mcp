@@ -3,8 +3,8 @@
   "nodes": [
     {
       "parameters": {
-        "content": "## Send new and pre-launch Shopify stores from Apify to a webhook daily\n\nShopify app developers, agencies and service providers who want to reach new Shopify stores early, often while the store is still behind its password page.\n\n### How it works\n1. A **Schedule Trigger** runs every morning at 8.\n2. **Set your settings** holds your webhook URL, look-back window, status, countries and a cap on results.\n3. An **HTTP Request** runs the New Shopify Stores Pre-Launch Radar Actor on Apify and waits for its results. Stores come from public Certificate Transparency logs, DNS and each store's public metadata.\n4. **Keep store fields** keeps domain, name, status, niche, country, currency, product count and dates.\n5. A second **HTTP Request** posts each store to your webhook (Clay, Make, Slack, a CRM).\n\n### Setup\n1. Create an Apify account and copy your API token.\n2. In n8n, create a **Header Auth** credential: name `Authorization`, value `Bearer YOUR_APIFY_TOKEN`, and select it in the Apify node.\n3. Paste your webhook URL in **Set your settings**.\n4. Run once to test, then activate.\n\nAn Apify account (the Actor is billed per store returned, $0.02 each; `maxItems` caps every run) and an endpoint that accepts a JSON POST.\n\n### Customization\n- Set `status` to `pre-launch` to get only stores still behind a password page, or `live`.\n- Set `countries` to a list such as `US, GB, FR`; leave it empty for all.\n- Add or remove fields in **Keep store fields**.\n\nBusiness-level public data only: no emails, phones or personal names. Not affiliated with Shopify Inc. Disclosure: I built the Apify Actor used here.",
-        "height": 1010,
+        "content": "## Send new and pre-launch Shopify stores from Apify to a webhook daily\n\nShopify app developers, agencies and service providers who want to reach new Shopify stores early, often while the store is still behind its password page.\n\n### How it works\n1. A **Schedule Trigger** runs every morning at 8.\n2. **Set your settings** holds your webhook URL, starting cursor, status, countries and a cap on results.\n3. **Load cursor** reads the position saved by the last successful run.\n4. An **HTTP Request** runs the New Shopify Stores Pre-Launch Radar Actor on Apify with that cursor: it returns, and bills, only the stores added since. Stores come from public Certificate Transparency logs, DNS and each store's public metadata.\n5. **Keep store fields** keeps domain, name, status, its check date, niche, country, currency, product count, dates and cursor.\n6. A second **HTTP Request** posts each store to your webhook (Clay, Make, Slack, a CRM).\n7. **Save cursor** stores the new position once the webhook calls succeed, so no store is delivered or billed twice.\n\n### Setup\n1. Create an Apify account and copy your API token.\n2. In n8n, create a **Header Auth** credential: name `Authorization`, value `Bearer YOUR_APIFY_TOKEN`, and select it in the Apify node.\n3. Paste your webhook URL in **Set your settings**. `startCursor` `0` starts with the last 30 days; `latest` starts with nothing and bills nothing.\n4. Run once to test, then activate. n8n saves the cursor only in active (scheduled) runs, so manual test runs start from `startCursor` again.\n\nAn Apify account (the Actor is billed per store returned, $0.02 each; `maxItems` caps every run) and an endpoint that accepts a JSON POST.\n\n### Customization\n- Set `status` to `pre-launch` to get only stores behind a password page at their last check, or `live`.\n- Set `countries` to a list such as `US, GB, FR`; leave it empty for all.\n- Add or remove fields in **Keep store fields** (keep `cursor`).\n\nBusiness-level public data only: no emails, phones or personal names. Not affiliated with Shopify Inc. Disclosure: I built the Apify Actor used here.",
+        "height": 700,
         "width": 560
       },
       "id": "f7e7e8d1-5328-5846-b130-e939e44f4cbe",
@@ -18,9 +18,9 @@
     },
     {
       "parameters": {
-        "content": "## 1. Fetch new stores\nRuns daily, reads your settings and asks the Apify Actor for the stores first detected in the look-back window.",
+        "content": "## 1. Fetch new stores\nRuns daily, reads your settings and the saved cursor, and asks the Apify Actor only for the stores added since the last run.",
         "height": 360,
-        "width": 700,
+        "width": 920,
         "color": 7
       },
       "id": "a13642cb-6757-521b-8372-692834b639b3",
@@ -34,9 +34,9 @@
     },
     {
       "parameters": {
-        "content": "## 2. Deliver to your tools\nKeeps the useful fields and posts one JSON per store to your webhook.",
+        "content": "## 2. Deliver to your tools\nKeeps the useful fields, posts one JSON per store to your webhook, then saves the cursor.",
         "height": 360,
-        "width": 500,
+        "width": 720,
         "color": 7
       },
       "id": "b86a8892-7a9e-5fdf-ad4e-4a0f42eac267",
@@ -44,7 +44,7 @@
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        760,
+        980,
         0
       ]
     },
@@ -79,10 +79,10 @@
               "type": "string"
             },
             {
-              "id": "d86492de-8f25-56c0-802c-0b18c3e92b9e",
-              "name": "sinceDays",
-              "value": 1,
-              "type": "number"
+              "id": "feabeccb-7ee1-5549-bf39-08cbd4dbf9f3",
+              "name": "startCursor",
+              "value": "0",
+              "type": "string"
             },
             {
               "id": "824ab884-0d69-5586-9685-41d0c5e87c98",
@@ -123,7 +123,7 @@
         "genericAuthType": "httpHeaderAuth",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ mode: 'feed', sinceDays: $json.sinceDays, status: $json.status, countries: $json.countries.split(',').map(c => c.trim().toUpperCase()).filter(c => c), maxItems: $json.maxItems }) }}",
+        "jsonBody": "={{ JSON.stringify({ mode: 'feed', cursor: $('Load cursor').first().json.cursor, status: $('Set your settings').first().json.status, countries: $('Set your settings').first().json.countries.split(',').map(c => c.trim().toUpperCase()).filter(c => c), maxItems: $('Set your settings').first().json.maxItems }) }}",
         "options": {
           "timeout": 300000
         }
@@ -133,7 +133,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        520,
+        740,
         200
       ]
     },
@@ -194,6 +194,18 @@
               "name": "first_detected",
               "value": "={{ $json.first_detected }}",
               "type": "string"
+            },
+            {
+              "id": "f36b9bd0-1def-576b-a826-aeeee0cd062a",
+              "name": "status_checked_at",
+              "value": "={{ $json.status_checked_at }}",
+              "type": "string"
+            },
+            {
+              "id": "429f0d1d-5f01-59c7-a575-d2788ec9e3d2",
+              "name": "cursor",
+              "value": "={{ $json.cursor }}",
+              "type": "number"
             }
           ]
         },
@@ -206,7 +218,7 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        840,
+        1060,
         200
       ]
     },
@@ -224,7 +236,33 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        1080,
+        1300,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Position saved by the last successful run (active workflows only).\nconst saved = $getWorkflowStaticData('global').cursor;\nreturn [{ json: { cursor: String(saved ?? $('Set your settings').first().json.startCursor) } }];"
+      },
+      "id": "c8787cbc-c264-5a73-b925-994025aec507",
+      "name": "Load cursor",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        520,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Runs after the webhook calls: the cursor moves only once stores are delivered.\nconst seen = $('Keep store fields').all().map(i => Number(i.json.cursor)).filter(Number.isFinite);\nif (seen.length) {\n  const data = $getWorkflowStaticData('global');\n  data.cursor = String(Math.max(Number(data.cursor) || 0, ...seen));\n}\nreturn [{ json: { cursor: $getWorkflowStaticData('global').cursor ?? null, stores: seen.length } }];"
+      },
+      "id": "eb59dbcc-3bd8-5f5d-ab1d-3aa79fc3a04f",
+      "name": "Save cursor",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1540,
         200
       ]
     }
@@ -242,6 +280,17 @@
       ]
     },
     "Set your settings": {
+      "main": [
+        [
+          {
+            "node": "Load cursor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Load cursor": {
       "main": [
         [
           {
@@ -268,6 +317,17 @@
         [
           {
             "node": "Send each store to your webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send each store to your webhook": {
+      "main": [
+        [
+          {
+            "node": "Save cursor",
             "type": "main",
             "index": 0
           }
