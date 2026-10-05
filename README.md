@@ -64,6 +64,9 @@ the reasons written out, logs every store in Google Sheets (updated by domain), 
 alert per hot store and one digest for the warm ones. Sample data is pinned, so a first test
 run needs no Apify token.
 
+Also in the official n8n template gallery, ready to import in one click:
+[n8n.io/workflows/19966](https://n8n.io/workflows/19966).
+
 A `niches` filter can be added to the Apify request body. The feed holds
 business-level public data only; any contact enrichment you add downstream is your own
 processing, under your own compliance.
